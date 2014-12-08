@@ -1,5 +1,5 @@
-Basics
-======
+1. Basics
+=========
 
 You now have two possibilities:
  * You download a linux (ubuntu for example) and you launch it in a virtual machine.
