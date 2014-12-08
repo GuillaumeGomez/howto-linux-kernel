@@ -1,0 +1,41 @@
+6. Create a dynamic module
+==========================
+
+It can be very useful to know how to build a dynamic module. But be very careful when you use it because a bad code could corrupt your whole system.
+
+Instead of the standard Makefile:
+
+```Makefile
+obj-y := file.o
+```
+
+We now need to do:
+
+```Makefile
+KERNELDIR ?= /usr/src/linux-headers-3.13.0-39-generic
+PWD := $(shell pwd)
+default:
+$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+clean:
+$(MAKE) -C $(KERNELDIR) M=$(PWD) modules clean
+```
+
+Run the make command:
+
+```Shell
+make
+```
+
+To test it:
+
+```Shell
+insmod module.ko
+```
+
+And to remove the added module:
+
+```Shell
+rmmod module
+```
+
+Once again, I repeat: be very careful !
