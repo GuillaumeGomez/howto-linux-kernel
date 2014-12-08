@@ -1,0 +1,73 @@
+2. Module
+=========
+
+We can now start. Here, we'll learn how to create a static module (which is build with the kernel).
+
+First, go to your linux source folder. Then create a folder in it, for example:
+
+```Shell
+mkdir my_module
+```
+
+Go in it and let's create our first module. Create a file (my_module.c for example) and put this code in:
+```C
+#include <linux/init.h>
+#include <linux/module.h>
+MODULE_LICENSE("Dual BSD/GPL");
+
+static int hello_init(void)
+{
+    pr_info("my_module: Hello world\n");
+    return 0;
+}
+
+static void hello_exit(void)
+{
+    pr_info("my_module: Goodbye, cruel world\n");
+}
+
+module_init(hello_init);
+module_exit(hello_exit);
+```
+
+Note the two very important calls at the end:
+```C
+module_init(hello_init);
+module_exit(hello_exit);
+```
+
+That's how linux knows what function to call. The init function has to return an integer and the exit one has to return nothing. The two functions don't take arguments. I used pr_info to display messages but you can also use printk.
+
+Now create a Makefile next to your file and put in it (of course, if you created a file called 'hello.c', you will have to set 'hello.o':
+
+```Makefile
+obj-y := my_module.o
+```
+
+Now go back to the linux main folder and add your module path to this line:
+```Makefile
+core-y         += kernel/ mm/ fs/ ipc/ security/ crypto/
+```
+
+Like this:
+
+```Makefile
+core-y         += kernel/ mm/ fs/ ipc/ security/ crypto/ block/ my_module/
+```
+
+Now you just have to build your linux (don't worry, it won't take a while this time):
+```Shell
+make
+```
+
+Launch qemu and you should see the two messages of your module. If you want to see the kernel messages again, just enter the following command:
+```Shell
+dmesg
+```
+
+And if you only want to see your module's messages:
+```Shell
+dmesg | grep "my_module"
+```
+
+Here ends this tutorial !

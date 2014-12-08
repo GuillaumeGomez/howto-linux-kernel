@@ -1,0 +1,90 @@
+4. Overwrite syscall
+====================
+
+Sounds terrifying, right ? Actually, I found it very cool so that's why I wanted to share it ! Let's begin. Create all the folders and stuff and put in the file:
+
+```C
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/mm.h>
+#include <linux/mman.h>
+#include <linux/syscalls.h>
+#include <linux/unistd.h>
+
+unsigned long *syscall_table = NULL;
+// corresponds to the syscall that will be replaced
+asmlinkage long (*original)(unsigned int size, unsigned long *ptr);
+unsigned long original_cr0;
+
+#define SYSCALL_TO_REPLACE __NR_epoll_ctl_old
+
+asmlinkage int new_syscall(unsigned int size, unsigned long *ptr)
+{
+  printk("I'm the syscall which overwritten the previous !\n");
+  return 0;
+}
+
+static unsigned long **find_syscall_table(void)
+{
+  unsigned long int offset = PAGE_OFFSET;
+  unsigned long **sct;
+
+  while (offset < ULLONG_MAX) {
+    sct = (unsigned long **)offset;
+
+    if (sct[__NR_close] == (unsigned long *) sys_close)
+      return sct;
+
+    offset += sizeof(void *);
+  }
+
+  return NULL;
+}
+
+static int __init overwrite_init(void)
+{
+  syscall_table = (void **) find_syscall_table();
+  if (syscall_table == NULL) {
+    printk(KERN_ERR"net_malloc: Syscall table is not found\n");
+    return -1;
+  }
+  // wrapper for asm part
+  original_cr0 = read_cr0();
+  write_cr0(original_cr0 & ~0x00010000);
+  original = (void *)syscall_table[SYSCALL_TO_REPLACE];
+
+  // we now overwrite the syscall
+  syscall_table[SYSCALL_TO_REPLACE] = (unsigned long *)new_syscall;
+  write_cr0(original_cr0);
+  printk("net_malloc: Patched! syscall number : %d\n", SYSCALL_TO_REPLACE);
+  return 0;
+}
+
+static void __exit overwrite_exit(void)
+{
+  // reset overwritten syscall
+  if (syscall_table != NULL) {
+    original_cr0 = read_cr0();
+    write_cr0(original_cr0 & ~0x00010000);
+
+    syscall_table[SYSCALL_TO_REPLACE] = (unsigned long *)original;
+
+    write_cr0(original_cr0);
+  }
+}
+
+module_init(overwrite_init);
+module_exit(oveerwrite_exit);
+```
+
+If you want to test it on a very used syscall, try to replace read or write and replace them with this:
+
+```C
+asmlinkage int new_syscall(unsigned int fd, const char __user *buf, size_t count)
+{
+    printk("who is calling the big bad write ?\n"); 
+    return (*original)(fd, buf, count);
+}
+```
+
+You'll see, the result will be quite fun (or not, it's just a point of view...).

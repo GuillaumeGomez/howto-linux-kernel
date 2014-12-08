@@ -1,0 +1,105 @@
+3. Syscall
+==========
+
+Here is a very interessant part of the linux kernel programming ! You always wondered "how can I add a syscall in my linux ?" ? Here is the answer !
+
+Go to your module folder and create a new one in it:
+```Shell
+mkdir syscall
+```
+
+Good. Now add its path to the current Makefile (the one in linux_test/linux/my_module/):
+```Makefile
+obj-y += syscall/
+```
+
+And you should also move your hello.c in a subfolder (it will get dirty very quickly otherwise).
+
+Now go in your syscall folder and create a syscall.c file. Put in it:
+
+```C
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/syscalls.h>
+#include <linux/kernel.h>
+
+SYSCALL_DEFINE0(hello)
+{
+  usleep_range(1000, 100000);
+  return 0;
+}
+```
+
+Very easy isn't it ? But that's not all ! You have to do one more thing (or two, depending on how we look at it...) ! You have to go the file(s) where syscalls are declared. Where ?
+
+```Shell
+cd ~/linux_test/linux/arch/x86/syscalls/
+```
+
+We are interested here by syscall_32.tbl and syscall_64.tbl. To add a syscall, go to the end of a file and add this line in (the first line is just an example):
+
+```
+356	i386	memfd_create		sys_memfd_create
+357	i386	hello			sys_hello
+```
+
+Be very careful in the syscall_64.tbl file ! If there is a "x32" in the line:
+
+```
+544     x32     io_submit               compat_sys_io_submit
+```
+
+You're not in the good place. Try to search the end of lines like this:
+
+```
+320     common  kexec_file_load         sys_kexec_file_load
+```
+
+Now you just have to add your syscall:
+
+```
+321     common  hello                   sys_hello
+```
+
+You can now build but if you want to test your syscall, just modify or create a new module and put in it:
+
+```C
+syscall(__NR_hello, 0);
+```
+
+If it says __NR_hello isn't defined, replace it with your syscall number:
+
+```C
+syscall(357, 0);
+```
+
+Everything's good ? Cool ! Now if you want to add parameter to your syscall:
+
+```C
+SYSCALL_DEFINE2(hello, unsigned int, begin, unsigned int, end)
+{
+  usleep_range(begin, end);
+  return 0;
+}
+```
+
+You will notice that SYSCALL_DEFINE0 is now SYSCALL_DEFINE2. I'm sure you already guessed but I say it: the number at the end is the number of parameter that your syscall needs.
+
+##Precision
+
+If you want your syscall to take a pointer as parameter, just know that you can't use "just like that". You're in kernel space, so you have to "import" (I simplify a lot) the pointer. Example:
+
+```C
+SYSCALL_DEFINE3(hello, unsigned int, begin, unsigned int, end, unsigned int*, ptr)
+{
+  usleep_range(begin, end);
+  copy_to_user(ptr, &end, sizeof(ptr));
+  return 0;
+}
+```
+
+You're welcome !
+
+##More ?
+
+If you want more information about syscalls, here is a [little article](http://lwn.net/Articles/604287/) very interesting which speak about it.
