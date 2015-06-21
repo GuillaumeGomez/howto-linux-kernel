@@ -1,7 +1,7 @@
 ![Linux logo](http://blog.guillaume-gomez.fr/blog/linux-kernel-logo.png)
 
-howto-linux-kernel
-==================
+Linux kernel
+============
 
 Tutorials to discover how to do some stuff on linux kernel. If you have any suggestions or if you find any problem, please report it !
 
