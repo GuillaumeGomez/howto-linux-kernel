@@ -1,3 +1,5 @@
+![Linux logo](http://blog.guillaume-gomez.fr/blog/linux-kernel-logo.png)
+
 howto-linux-kernel
 ==================
 
