@@ -7,4 +7,4 @@ Tutorials to discover how to do some stuff on linux kernel. If you have any sugg
 
 ##Important
 
-These tutorials are based on linux kernel 3.x. It is very likely to not work if you're using an older (or newer !) version.
+These tutorials are based on linux kernel 4.x. It is very likely to not work if you're using an older (or newer !) version.
