@@ -1,4 +1,4 @@
-![Linux logo](http://blog.guillaume-gomez.fr/blog/linux-kernel-logo.png)
+![Linux logo](https://blog.guillaume-gomez.fr/blog/linux-kernel-logo.png)
 
 Linux kernel
 ============
